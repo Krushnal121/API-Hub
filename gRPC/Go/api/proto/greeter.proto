@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package greeter.v1;
+option go_package = "github.com/Krushnal121/API-Hub/gRPC/Go/api/gen/v1;v1";
+
+service Greeter {
+  rpc SayHello (HelloRequest) returns (HelloReply);
+}
+
+message HelloRequest {
+  string name = 1;
+}
+
+message HelloReply {
+  string message = 1;
+}
