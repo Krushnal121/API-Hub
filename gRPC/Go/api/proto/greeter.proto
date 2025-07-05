@@ -3,14 +3,29 @@ syntax = "proto3";
 package greeter.v1;
 option go_package = "github.com/Krushnal121/API-Hub/gRPC/Go/api/gen/v1;v1";
 
+// Greeter service definition with multiple RPC types
 service Greeter {
+  // Unary RPC for simple greetings
   rpc SayHello (HelloRequest) returns (HelloReply);
+  
+  // Server streaming for multiple greetings
+  rpc SayHelloStream (HelloRequest) returns (stream HelloReply);
+  
+  // Client streaming for bulk greetings
+  rpc SayHelloBulk (stream HelloRequest) returns (HelloReply);
+  
+  // Bidirectional streaming for chat-like interaction
+  rpc SayHelloChat (stream HelloRequest) returns (stream HelloReply);
 }
-
+// Request message containing user information
 message HelloRequest {
   string name = 1;
+  int32 age = 2;
+  repeated string interests = 3;
 }
-
+// Reply message with greeting and metadata
 message HelloReply {
   string message = 1;
+  int64 timestamp = 2;
+  string server_info = 3;
 }
