@@ -2,77 +2,38 @@ package main
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
 	"fmt"
 	"io"
 	"log"
-	"os"
-	"sync"
 	"time"
 
 	v1 "github.com/Krushnal121/API-Hub/gRPC/Go/api/gen/v1"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/keepalive"
 )
 
-var (
-	conn *grpc.ClientConn
-	once sync.Once
-)
+func main() {
+	// Dial server with insecure credentials
+	conn, err := grpc.Dial("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("Failed to connect: %v", err)
+	}
+	defer conn.Close()
 
-// Connection pool/reuse
-func getConnection() *grpc.ClientConn {  
-	once.Do(func() {
-		var err error
-		var creds credentials.TransportCredentials
+	client := v1.NewGreeterClient(conn)
 
-		// Check if certificates exist
-		if _, err := os.Stat("certs/server.crt"); err == nil {
-			// Load the server's certificate
-			certificate, err := os.ReadFile("certs/server.crt")
-			if err != nil {
-				log.Printf("could not read server certificate: %v", err)
-				creds = insecure.NewCredentials()
-			} else {
-				// Create a certificate pool and add the server's certificate
-				certPool := x509.NewCertPool()
-				if !certPool.AppendCertsFromPEM(certificate) {
-					log.Printf("failed to add server's certificate to the certificate pool")
-					creds = insecure.NewCredentials()
-				} else {
-					// Create the TLS credentials
-					config := &tls.Config{
-						RootCAs: certPool,
-					}
-					creds = credentials.NewTLS(config)
-				}
-			}
-		} else {
-			creds = insecure.NewCredentials()
-		}
+	testUnaryRPC(client)
+	testServerStreaming(client)
+	testClientStreaming(client)
+	testBidirectionalStreaming(client)
 
-		conn, err = grpc.NewClient("localhost:50051",
-			grpc.WithTransportCredentials(creds),
-			grpc.WithKeepaliveParams(keepalive.ClientParameters{
-				Time:                30 * time.Second,
-				Timeout:             5 * time.Second,
-				PermitWithoutStream: true,
-			}),
-		)
-		if err != nil {
-			log.Fatal(err)
-		}
-	})
-	return conn
+	fmt.Println("\n=== All tests completed ===")
 }
 
 func testUnaryRPC(client v1.GreeterClient) {
 	fmt.Println("\n=== Testing Unary RPC ===")
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	req := &v1.HelloRequest{
@@ -88,20 +49,15 @@ func testUnaryRPC(client v1.GreeterClient) {
 	}
 
 	fmt.Printf("Response: %s\n", resp.GetMessage())
-	fmt.Printf("Timestamp: %d\n", resp.GetTimestamp())
-	fmt.Printf("Server Info: %s\n", resp.GetServerInfo())
 }
 
 func testServerStreaming(client v1.GreeterClient) {
 	fmt.Println("\n=== Testing Server Streaming ===")
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	req := &v1.HelloRequest{
-		Name: "Krushnal",
-		Age:  21,
-	}
+	req := &v1.HelloRequest{Name: "Krushnal", Age: 21}
 
 	stream, err := client.SayHelloStream(ctx, req)
 	if err != nil {
@@ -118,15 +74,14 @@ func testServerStreaming(client v1.GreeterClient) {
 			log.Printf("Error receiving stream: %v", err)
 			break
 		}
-
-		fmt.Printf("Stream message: %s (Info: %s)\n", resp.GetMessage(), resp.GetServerInfo())
+		fmt.Printf("Stream message: %s\n", resp.GetMessage())
 	}
 }
 
 func testClientStreaming(client v1.GreeterClient) {
 	fmt.Println("\n=== Testing Client Streaming ===")
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	stream, err := client.SayHelloBulk(ctx)
@@ -135,7 +90,6 @@ func testClientStreaming(client v1.GreeterClient) {
 		return
 	}
 
-	// Send multiple requests
 	names := []struct {
 		name string
 		age  int32
@@ -147,16 +101,12 @@ func testClientStreaming(client v1.GreeterClient) {
 	}
 
 	for _, person := range names {
-		req := &v1.HelloRequest{
-			Name: person.name,
-			Age:  person.age,
-		}
-
+		req := &v1.HelloRequest{Name: person.name, Age: person.age}
 		if err := stream.Send(req); err != nil {
 			log.Printf("Error sending to stream: %v", err)
 			return
 		}
-		fmt.Printf("Sent: %s (age %d)\n", person.name, person.age)
+		fmt.Printf("Sent: %s\n", person.name)
 	}
 
 	resp, err := stream.CloseAndRecv()
@@ -171,7 +121,7 @@ func testClientStreaming(client v1.GreeterClient) {
 func testBidirectionalStreaming(client v1.GreeterClient) {
 	fmt.Println("\n=== Testing Bidirectional Streaming ===")
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
 	stream, err := client.SayHelloChat(ctx)
@@ -180,17 +130,12 @@ func testBidirectionalStreaming(client v1.GreeterClient) {
 		return
 	}
 
-	// Send messages in a goroutine
 	go func() {
-		messages := []string{"Emma", "Frank", "Grace"}
-		for _, name := range messages {
-			req := &v1.HelloRequest{
-				Name: name,
-				Age:  20 + int32(len(name)), // Simple age calculation
-			}
-
+		names := []string{"Emma", "Frank", "Grace"}
+		for _, name := range names {
+			req := &v1.HelloRequest{Name: name, Age: 20 + int32(len(name))}
 			if err := stream.Send(req); err != nil {
-				log.Printf("Error sending chat message: %v", err)
+				log.Printf("Send error: %v", err)
 				return
 			}
 			fmt.Printf("Sent chat: %s\n", name)
@@ -199,34 +144,15 @@ func testBidirectionalStreaming(client v1.GreeterClient) {
 		stream.CloseSend()
 	}()
 
-	// Receive messages
 	for {
 		resp, err := stream.Recv()
 		if err == io.EOF {
 			break
 		}
 		if err != nil {
-			log.Printf("Error receiving chat: %v", err)
+			log.Printf("Receive error: %v", err)
 			break
 		}
-
 		fmt.Printf("Chat response: %s\n", resp.GetMessage())
 	}
-}
-
-func main() {
-	// Connect to the gRPC server
-	conn := getConnection()
-	defer conn.Close()
-
-	// Create a client
-	client := v1.NewGreeterClient(conn)
-
-	// Test all RPC types
-	testUnaryRPC(client)
-	testServerStreaming(client)
-	testClientStreaming(client)
-	testBidirectionalStreaming(client)
-
-	fmt.Println("\n=== All tests completed ===")
 }

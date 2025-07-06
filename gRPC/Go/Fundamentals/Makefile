@@ -41,12 +41,3 @@ build:
 	go build -o bin/server cmd/server/main.go
 	@echo "Building client..."
 	go build -o bin/client cmd/client/main.go
-
-# Generate self-signed certificates for TLS (optional)
-gen-certs:
-	@mkdir -p certs
-	openssl req -newkey rsa:4096 -nodes -sha256 -keyout certs/server.key \
-		-x509 -days 365 -out certs/server.crt \
-		-subj "/C=US/ST=CA/L=San Francisco/O=gRPC Demo/OU=IT/CN=localhost" \
-		-addext "subjectAltName = DNS:localhost,IP:127.0.0.1"
-	@echo "Self-signed certificates generated in certs/"
