@@ -62,35 +62,39 @@ export PATH="$PATH:$(go env GOPATH)/bin"
 
 ### 2. Generate gRPC Code
 
-Use the included `Makefile`:
+To generate the gRPC code from the `.proto` file, use the `Makefile`:
 
 ```bash
 make gen
 ```
 
-This runs:
+This will generate the code under the `api/gen/v1/` directory.
 
-```make
-PROTO_DIR=api/proto
-OUT_DIR=api/gen
+### 3. Install Dependencies
 
-gen:
-	protoc \
-		--proto_path=$(PROTO_DIR) \
-		--go_out=$(OUT_DIR) \
-		--go-grpc_out=$(OUT_DIR) \
-		$(PROTO_DIR)/*.proto
+Run the following command to install any required dependencies:
+
+```bash
+make deps
 ```
 
-> Generated files will be placed under `api/gen/v1/`.
+### 4. Build the Project
 
-## 🚀 Run the Server
+To build the server and client binaries:
+
+```bash
+make build
+```
+
+### 5. Run the Server
+
+Start the gRPC server:
 
 ```bash
 make start-server
 ```
 
-**Or**
+Or run the server manually:
 
 ```bash
 go run cmd/server/main.go
@@ -99,18 +103,18 @@ go run cmd/server/main.go
 Expected output:
 
 ```
-2025/06/15 09:03:31 INFO Starting gRPC server port=50051
+2025/06/15 09:03:31 INFO Starting gRPC server on port=50051
 ```
 
----
+### 6. Run the Client
 
-## 📞 Run the Client
+Start the gRPC client:
 
 ```bash
 make start-client
 ```
 
-**Or**
+Or run the client manually:
 
 ```bash
 go run cmd/client/main.go
@@ -122,17 +126,15 @@ Expected output:
 Response from server: Hello, Krushnal!
 ```
 
----
-
 ## 🔐 Features Included
 
 * ✅ Protobuf-based service definition
 * ✅ gRPC server and client using modern Go APIs
 * ✅ Clean layered structure (`cmd`, `internal`, `api`)
-* ✅ Logging with `slog`
 * ✅ Easy code generation via `Makefile`
-
+* ✅ Logging with `slog`
+* ✅ Dependency management with Go modules
 
 ## 📄 License
 
-This project is open-sourced under the [MIT License](LICENSE).
+This project is open-sourced under the [MIT License](../../../LICENSE).
