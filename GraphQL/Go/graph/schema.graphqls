@@ -1,0 +1,42 @@
+# Scalar types: ID, String, Int, Float, Boolean
+# ID is serialized as String but represents unique identifiers
+
+type User {
+  id: ID!              # ! means non-nullable (required)
+  name: String!        # camelCase for fields (convention)
+  email: String!
+  posts: [Post!]!      # [Post!]! means non-null array of non-null Posts
+}
+
+type Post {
+  id: ID!
+  title: String!
+  content: String      # No ! means nullable (optional)
+  author: User!        # Relationships defined via types
+}
+
+# Input types are used for mutations (cannot mix with output types)
+input NewUser {
+  name: String!
+  email: String!
+}
+
+input NewPost {
+  title: String!
+  content: String
+  authorId: ID!
+}
+
+# Query type is REQUIRED in all GraphQL schemas
+type Query {
+  users: [User!]!
+  user(id: ID!): User  # Arguments in parentheses
+  posts: [Post!]!
+}
+
+# Mutation type for write operations (optional but common)
+type Mutation {
+  createUser(input: NewUser!): User!
+  createPost(input: NewPost!): Post!
+  deletePost(id: ID!): Post
+}
