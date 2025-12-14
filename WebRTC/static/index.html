@@ -230,7 +230,7 @@
                         addLog(`New local ICE candidate: ${event.candidate.candidate.substring(0, 50)}...`);
 
                         try {
-                            await fetch('http://localhost:8080/candidate', {
+                            await fetch(`${window.location.origin}/candidate`, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
@@ -258,7 +258,7 @@
 
                 // Send offer to server
                 addLog('Sending offer to server...');
-                const response = await fetch('http://localhost:8080/offer', {
+                const response = await fetch(`${window.location.origin}/offer`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -300,7 +300,7 @@
             candidatePollInterval = setInterval(async () => {
                 try {
                     const response = await fetch(
-                        `http://localhost:8080/answer-candidates?sessionId=${sessionId}`
+                        `${window.location.origin}/answer-candidates?sessionId=${sessionId}`
                     );
 
                     if (response.ok) {

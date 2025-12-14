@@ -29,8 +29,8 @@ func main() {
 	http.HandleFunc("/candidate", handleCandidate)
 	http.HandleFunc("/answer-candidates", handleAnswerCandidates)
 
-	fmt.Println("WebRTC server starting on http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	fmt.Println("WebRTC server starting on http://0.0.0.0:3000")
+	log.Fatal(http.ListenAndServe("0.0.0.0:3000", nil))
 }
 
 func handleOffer(w http.ResponseWriter, r *http.Request) {

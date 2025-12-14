@@ -58,8 +58,8 @@ ffmpeg -i input.mp4 -vn -c:a libopus -page_duration 20000 -f ogg audio.ogg
     ```bash
     go run main.go
     ```
-2.  The server will start on `http://localhost:8080`.
-3.  Open a WebRTC compatible browser and navigate to `http://localhost:8080`.
+2.  The server will start on `http://0.0.0.0:3000`.
+3.  Open a WebRTC compatible browser and navigate to `http://0.0.0.0:3000`.
 4.  The video stream should start playing automatically once the connection is established.
 
 ## Project Structure

@@ -91,6 +91,6 @@ func main() {
 	http.HandleFunc("/ws", server.handleWebSocket)
 	http.Handle("/", http.FileServer(http.Dir("./static/")))
 
-	log.Println("Chat server starting on :8090...")
-	log.Fatal(http.ListenAndServe(":8090", nil))
+	log.Println("Chat server starting on 0.0.0.0:8090...")
+	log.Fatal(http.ListenAndServe("0.0.0.0:8090", nil))
 }

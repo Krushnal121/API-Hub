@@ -73,7 +73,10 @@
         const sendButton = document.getElementById('sendButton');
         
         function connect() {
-            ws = new WebSocket('ws://localhost:8090/ws');
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = window.location.host;
+            const wsUrl = `${protocol}//${host}/ws`;
+            ws = new WebSocket(wsUrl);
             
             ws.onopen = function(event) {
                 console.log('WebSocket connected');
